@@ -1524,12 +1524,7 @@ void phase0_endio(void *private, int error)
 	orig_mref_a->is_persistent = true;
 	qq_dec_flying(&brick->q_phase[0]);
 
-	/* Pin mref->ref_count so it can't go away
-	 * after _complete().
-	 */
 	_CHECK(orig_mref_a->shadow_ref, err);
-	_mref_get(orig_mref); // must be paired with __trans_logger_ref_put()
-	atomic_inc(&brick->inner_balance_count);
 
 	// signal completion to the upper layer
 	_complete(brick, orig_mref_a, error, false);
@@ -1538,7 +1533,7 @@ void phase0_endio(void *private, int error)
 	 */
 	qq_mref_insert(&brick->q_phase[1], orig_mref_a);
 
-	/* Undo the above pinning
+	/* Undo one level of pinning
 	 */
 	__trans_logger_ref_put(brick, orig_mref_a);
 
@@ -1588,22 +1583,45 @@ bool phase0_startio(struct trans_logger_mref_aspect *orig_mref_a)
 
 	memcpy(data, orig_mref_a->shadow_data, orig_mref->ref_len);
 
+	/* Caution / races: phase0_endio() may be (almost) directly called
+	 * by log_finalize() in some cases,
+	 * although usually the IO will take some time.
+	 * Ensure that the atomic counters cannot get negative.
+	 * Notice that phase0_endio() may call _complete() which indirectly
+	 * may drop one refcount on orig_mref if the original caller
+	 * does so in her callback.
+	 * TBD: simplify code structure and reduce number of atomic ops.
+	 */
+	qq_inc_flying(&brick->q_phase[0]);
 	atomic_inc(&brick->log_fly_count);
+	_mref_get(orig_mref); // must be paired with __trans_logger_ref_put()
+	atomic_inc(&brick->inner_balance_count);
 
 	ok = log_finalize(logst, orig_mref->ref_len, phase0_endio, orig_mref_a);
 	if (unlikely(!ok)) {
+		qq_dec_flying(&brick->q_phase[0]);
 		atomic_dec(&brick->log_fly_count);
+		__trans_logger_ref_put(brick, orig_mref_a);
 		goto err;
 	}
+
 	log_pos = logst->log_pos + logst->offset;
 	orig_mref_a->log_pos = log_pos;
 
-	// update new log_pos in the symlinks
+	phase0_preio(orig_mref_a);
+	
 	down(&input->inf_mutex);
-	input->inf.inf_log_pos = log_pos;
-	memcpy(&input->inf.inf_log_pos_stamp, &logst->log_pos_stamp, sizeof(input->inf.inf_log_pos_stamp));
-	_inf_callback(input, false);
 
+	/* Maintain completion list.
+	 * It remembers the order of all writes, which is equivalent to
+	 * the order of positions in the transaction logfile
+	 * (hence the name pos_list).
+	 * The corresponding counter-action in pos_complete() should be
+	 * absolutely the last action on the orig_mref, since it is only executed
+	 * when the refcount drops to 0, which should only happen when
+	 * all else actions are finished, even refcounts held by our
+	 * callers or whatever.
+	 */
 #ifdef CONFIG_MARS_DEBUG
 	if (!list_empty(&input->pos_list)) {
 		struct trans_logger_mref_aspect *last_mref_a;
@@ -1615,11 +1633,13 @@ bool phase0_startio(struct trans_logger_mref_aspect *orig_mref_a)
 #endif
 	list_add_tail(&orig_mref_a->pos_head, &input->pos_list);
 	atomic_inc(&input->pos_count);
+
+	// update new log_pos in the symlinks
+	input->inf.inf_log_pos = log_pos;
+	memcpy(&input->inf.inf_log_pos_stamp, &logst->log_pos_stamp, sizeof(input->inf.inf_log_pos_stamp));
+	_inf_callback(input, false);
+
 	up(&input->inf_mutex);
-
-	qq_inc_flying(&brick->q_phase[0]);
-
-	phase0_preio(orig_mref_a);
 
 	return true;
 
