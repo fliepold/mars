@@ -2229,12 +2229,34 @@ struct rank_info extra_rank_mref_flying_log[] = {
 };
 
 static
+struct rank_info extra_float_rank_mref_flying_io[] = {
+	{     0,    0 },
+	{    31,    0 },
+	{    32, -200 },
+	{ RKI_DUMMY }
+};
+
+static
+struct rank_info extra_nofloat_rank_mref_flying_io[] = {
+	{     0,    0 },
+	{    63,    0 },
+	{    64, -200 },
+	{ RKI_DUMMY }
+};
+
+static
 struct rank_info *extra_rank_mref_flying[2][LOGGER_QUEUES] = {
 	[0] = {
 		[0] = extra_rank_mref_flying_log,
+		[1] = extra_float_rank_mref_flying_io,
+		[2] = extra_float_rank_mref_flying_io,
+		[3] = extra_float_rank_mref_flying_io,
 	},
 	[1] = {
 		[0] = extra_rank_mref_flying_log,
+		[1] = extra_nofloat_rank_mref_flying_io,
+		[2] = extra_nofloat_rank_mref_flying_io,
+		[3] = extra_nofloat_rank_mref_flying_io,
 	},
 };
 
