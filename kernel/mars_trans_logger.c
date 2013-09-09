@@ -2217,14 +2217,25 @@ struct rank_info *fly_ranks[2][LOGGER_QUEUES] = {
 	},
 };
 
+// limit mref IO parallelism on transaction log
 static
-struct rank_info extra_rank_mref_flying[] = {
+struct rank_info extra_rank_mref_flying_log[] = {
 	{     0,    0 },
 	{     1,   10 },
 	{    16,   30 },
 	{    31,    0 },
 	{    32, -200 },
 	{ RKI_DUMMY }
+};
+
+static
+struct rank_info *extra_rank_mref_flying[2][LOGGER_QUEUES] = {
+	[0] = {
+		[0] = extra_rank_mref_flying_log,
+	},
+	[1] = {
+		[0] = extra_rank_mref_flying_log,
+	},
 };
 
 static
@@ -2318,10 +2329,11 @@ int _do_ranking(struct trans_logger_brick *brick, struct rank_data rkd[])
 			break;
 		}
 
-		if (i == 0) {
-			// limit mref IO parallelism on transaction log
-			ranking_compute(&rkd[0], extra_rank_mref_flying, mref_flying);
-		} else if (i == 1 && !floating_mode) {
+		if (extra_rank_mref_flying[floating_mode][i]) {
+			ranking_compute(&rkd[i], extra_rank_mref_flying[floating_mode][i], mref_flying);
+		}
+
+		if (i == 1 && !floating_mode) {
 			struct trans_logger_brick *leader;
 			int lim;
 
