@@ -2355,7 +2355,7 @@ int _do_ranking(struct trans_logger_brick *brick, struct rank_data rkd[])
 			ranking_compute(&rkd[i], extra_rank_mref_flying[floating_mode][i], mref_flying);
 		}
 
-		if (i == 1 && !floating_mode) {
+		if (i == 1) {
 			struct trans_logger_brick *leader;
 			int lim;
 
