@@ -149,7 +149,6 @@ void _set_socketopts(struct socket *sock)
 	status = kernel_setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, (char*)&default_tcp_params.tcp_keepidle, sizeof(default_tcp_params.tcp_keepidle));
 	_check(status);
 
-#if 1
 	{
 		struct timeval t = {
 			.tv_sec = default_tcp_params.tcp_timeout,
@@ -158,13 +157,10 @@ void _set_socketopts(struct socket *sock)
 		status = kernel_setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&t, sizeof(t));
 		_check(status);
 	}
-#endif
 
-#if 1
 	if (sock->file) { // switch back to blocking mode
 		sock->file->f_flags &= ~O_NONBLOCK;
 	}
-#endif
 }
 
 int mars_create_socket(struct mars_socket *msock, struct sockaddr_storage *addr, bool is_server)
