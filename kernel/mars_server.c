@@ -20,7 +20,7 @@
 
 #include "mars_server.h"
 
-#define NR_SOCKETS 3
+#define NR_SOCKETS			3
 
 static struct mars_socket server_socket[NR_SOCKETS] = {};
 static struct task_struct *server_thread[NR_SOCKETS] = {};
@@ -47,7 +47,7 @@ int cb_thread(void *data)
 	brick->cb_running = true;
 	wake_up_interruptible(&brick->startup_event);
 
-        while (!brick_thread_should_stop() || !list_empty(&brick->cb_read_list) || !list_empty(&brick->cb_write_list) || atomic_read(&brick->in_flight) > 0) {
+	while (!brick_thread_should_stop() || !list_empty(&brick->cb_read_list) || !list_empty(&brick->cb_write_list) || atomic_read(&brick->in_flight) > 0) {
 		struct server_mref_aspect *mref_a;
 		struct mref_object *mref;
 		struct list_head *tmp;
@@ -167,7 +167,7 @@ int server_io(struct server_brick *brick, struct mars_socket *sock, struct mars_
 		_mref_free(mref);
 		goto done;
 	}
-	
+
 	mref_a->brick = brick;
 	SETUP_CALLBACK(mref, server_endio, mref_a);
 
@@ -175,7 +175,7 @@ int server_io(struct server_brick *brick, struct mars_socket *sock, struct mars_
 	if (!mref->ref_cs_mode < 2)
 		amount = (mref->ref_len - 1) / 1024 + 1;
 	mars_limit_sleep(&server_limiter, amount);
-	
+
 	status = GENERIC_INPUT_CALL(brick->inputs[0], mref_get, mref);
 	if (unlikely(status < 0)) {
 		MARS_WRN("mref_get execution error = %d\n", status);
@@ -183,7 +183,7 @@ int server_io(struct server_brick *brick, struct mars_socket *sock, struct mars_
 		status = 0; // continue serving requests
 		goto done;
 	}
-	
+
 	atomic_inc(&brick->in_flight);
 	GENERIC_INPUT_CALL(brick->inputs[0], mref_io, mref);
 
@@ -286,11 +286,11 @@ int handler_thread(void *data)
 	MARS_DBG("#%d --------------- handler_thread starting on socket %p\n", sock->s_debug_nr, sock);
 	if (!ok)
 		goto done;
-	
+
 	brick->handler_running = true;
 	wake_up_interruptible(&brick->startup_event);
 
-        while (!brick_thread_should_stop() && mars_socket_is_alive(sock)) {
+	while (!brick_thread_should_stop() && mars_socket_is_alive(sock)) {
 		struct mars_cmd cmd = {};
 
 		status = -EINTR;
@@ -401,7 +401,7 @@ int handler_thread(void *data)
 			} else {
 				MARS_ERR("#%d cannot find brick '%s'\n", sock->s_debug_nr, path);
 			}
-			
+
 		err:
 			cmd.cmd_int1 = status;
 			down(&brick->socket_sem);
@@ -441,7 +441,7 @@ int handler_thread(void *data)
 	MARS_DBG("#%d handler_thread terminating, status = %d\n", sock->s_debug_nr, status);
 
 	debug_nr = sock->s_debug_nr;
-	
+
 	MARS_DBG("#%d done.\n", debug_nr);
 	atomic_dec(&server_handler_count);
 	brick->killme = true;
@@ -557,7 +557,7 @@ static
 char *server_statistics(struct server_brick *brick, int verbose)
 {
 	char *res = brick_string_alloc(1024);
-	
+
 	snprintf(res, 1024,
 		 "cb_running = %d "
 		 "handler_running = %d "
@@ -566,7 +566,7 @@ char *server_statistics(struct server_brick *brick, int verbose)
 		 brick->handler_running,
 		 atomic_read(&brick->in_flight));
 
-        return res;
+	return res;
 }
 
 static
@@ -620,8 +620,8 @@ static int server_output_construct(struct server_output *output)
 
 static struct server_brick_ops server_brick_ops = {
 	.brick_switch = server_switch,
-        .brick_statistics = server_statistics,
-        .reset_statistics = server_reset_statistics,
+	.brick_statistics = server_statistics,
+	.reset_statistics = server_reset_statistics,
 };
 
 static struct server_output_ops server_output_ops = {
@@ -691,7 +691,7 @@ static int _server_thread(void *data)
 
 	MARS_INF("-------- server starting on host '%s' ----------\n", id);
 
-        while (!brick_thread_should_stop() &&
+	while (!brick_thread_should_stop() &&
 	      (!mars_global || !mars_global->global_power.button)) {
 		MARS_DBG("system did not start up\n");
 		brick_msleep(5000);
@@ -699,7 +699,7 @@ static int _server_thread(void *data)
 
 	MARS_INF("-------- server now working on host '%s' ----------\n", id);
 
-        while (!brick_thread_should_stop() || !list_empty(&server_global.brick_anchor)) {
+	while (!brick_thread_should_stop() || !list_empty(&server_global.brick_anchor)) {
 		struct server_brick *brick = NULL;
 		struct mars_socket handler_socket = {};
 

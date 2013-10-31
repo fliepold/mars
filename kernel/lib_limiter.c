@@ -28,20 +28,20 @@ int mars_limit(struct mars_limiter *lim, int amount)
 		if (likely(lim->lim_stamp && elapsed < LIMITER_TIME_RESOLUTION * 8)) {
 			long long rate_raw;
 			int rate;
-			
+
 			/* Races are possible, but taken into account.
 			 * There is no real harm from rarely lost updates.
 			 */
 			if (likely(amount > 0))
 				lim->lim_accu += amount;
-			
+
 			rate_raw = lim->lim_accu * LIMITER_TIME_RESOLUTION / elapsed;
 			rate = rate_raw;
 			if (unlikely(rate_raw > INT_MAX)) {
 				rate = INT_MAX;
 			}
 			lim->lim_rate = rate;
-			
+
 			// limit exceeded?
 			if (lim->lim_max_rate > 0 && rate > lim->lim_max_rate) {
 				int this_delay = 1000 - (long long)lim->lim_max_rate * 1000 / rate;
@@ -49,7 +49,7 @@ int mars_limit(struct mars_limiter *lim, int amount)
 				if (this_delay > delay)
 					delay = this_delay;
 			}
-			
+
 			elapsed -= LIMITER_TIME_RESOLUTION * 2;
 			if (elapsed > LIMITER_TIME_RESOLUTION) {
 				lim->lim_stamp += elapsed;

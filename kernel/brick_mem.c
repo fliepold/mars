@@ -13,16 +13,16 @@
 #include "brick_say.h"
 #include "lamport.h"
 
-#define USE_KERNEL_PAGES // currently mandatory (vmalloc does not work)
+#define USE_KERNEL_PAGES		// currently mandatory (vmalloc does not work)
 
-#define MAGIC_BLOCK  (int)0x8B395D7B
-#define MAGIC_BEND   (int)0x8B395D7C
-#define MAGIC_MEM1   (int)0x8B395D7D
-#define MAGIC_MEM2   (int)0x9B395D8D
-#define MAGIC_MEND1  (int)0x8B395D7E
-#define MAGIC_MEND2  (int)0x9B395D8E
-#define MAGIC_STR    (int)0x8B395D7F
-#define MAGIC_SEND   (int)0x9B395D8F
+#define MAGIC_BLOCK			(int)0x8B395D7B
+#define MAGIC_BEND			(int)0x8B395D7C
+#define MAGIC_MEM1			(int)0x8B395D7D
+#define MAGIC_MEM2			(int)0x9B395D8D
+#define MAGIC_MEND1			(int)0x8B395D7E
+#define MAGIC_MEND2			(int)0x9B395D8E
+#define MAGIC_STR			(int)0x8B395D7F
+#define MAGIC_SEND			(int)0x9B395D8F
 
 #define INT_ACCESS(ptr,offset) (*(int*)(((char*)(ptr)) + (offset)))
 
@@ -38,14 +38,14 @@
 #define _BRICK_MSG(_class, _dump, _fmt, _args...)			\
 	do {								\
 		struct timespec _s_now = CURRENT_TIME;			\
-		struct timespec _l_now;					\
+		struct timespec _l_now; 				\
 		get_lamport(&_l_now);					\
-		say(_class, _BRICK_FMT(_fmt), ##_args); if (_dump) dump_stack(); \
+		say(_class, _BRICK_FMT(_fmt), ##_args); if (_dump) dump_stack();\
 	} while (0)
 
 #define BRICK_ERR(_fmt, _args...) _BRICK_MSG(SAY_ERROR, true,  _fmt, ##_args)
-#define BRICK_WRN(_fmt, _args...) _BRICK_MSG(SAY_WARN,  false, _fmt, ##_args)
-#define BRICK_INF(_fmt, _args...) _BRICK_MSG(SAY_INFO,  false, _fmt, ##_args)
+#define BRICK_WRN(_fmt, _args...) _BRICK_MSG(SAY_WARN,	false, _fmt, ##_args)
+#define BRICK_INF(_fmt, _args...) _BRICK_MSG(SAY_INFO,	false, _fmt, ##_args)
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -79,9 +79,9 @@ static atomic_t mem_redirect_alloc = ATOMIC_INIT(0);
 static atomic_t mem_count[BRICK_DEBUG_MEM] = {};
 static atomic_t mem_free[BRICK_DEBUG_MEM] = {};
 static int  mem_len[BRICK_DEBUG_MEM] = {};
-#define PLUS_SIZE (6 * sizeof(int))
+#define PLUS_SIZE			(6 * sizeof(int))
 #else
-#define PLUS_SIZE (2 * sizeof(int))
+#define PLUS_SIZE			(2 * sizeof(int))
 #endif
 
 static inline
@@ -261,7 +261,7 @@ void _brick_string_free(const char *data, int cline)
 	int magic;
 	int len;
 	int line;
-	
+
 	data -= sizeof(int) * 3;
 	magic = INT_ACCESS(data, 0);
 	if (unlikely(magic != MAGIC_STR)) {

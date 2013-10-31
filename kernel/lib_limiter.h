@@ -6,7 +6,7 @@
 
 #include <linux/utsname.h>
 
-#define LIMITER_TIME_RESOLUTION NSEC_PER_SEC
+#define LIMITER_TIME_RESOLUTION 	NSEC_PER_SEC
 
 struct mars_limiter {
 	/* hierarchy tree */
