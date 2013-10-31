@@ -5,7 +5,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 
-int mars_limit(struct mars_limiter *lim, int amount)
+int xio_limit(struct xio_limiter *lim, int amount)
 {
 	int delay = 0;
 	long long now;
@@ -69,4 +69,4 @@ int mars_limit(struct mars_limiter *lim, int amount)
 	}
 	return delay;
 }
-EXPORT_SYMBOL_GPL(mars_limit);
+EXPORT_SYMBOL_GPL(xio_limit);

@@ -8,9 +8,9 @@
 
 #define LIMITER_TIME_RESOLUTION 	NSEC_PER_SEC
 
-struct mars_limiter {
+struct xio_limiter {
 	/* hierarchy tree */
-	struct mars_limiter *lim_father;
+	struct xio_limiter *lim_father;
 	/* tunables */
 	int lim_max_rate;
 	/* readable */
@@ -20,12 +20,12 @@ struct mars_limiter {
 	long long lim_accu;
 };
 
-extern int mars_limit(struct mars_limiter *lim, int amount);
+extern int xio_limit(struct xio_limiter *lim, int amount);
 
 extern inline
-void mars_limit_sleep(struct mars_limiter *lim, int amount)
+void xio_limit_sleep(struct xio_limiter *lim, int amount)
 {
-	int sleep = mars_limit(lim, amount);
+	int sleep = xio_limit(lim, amount);
 	if (sleep > 0) {
 		if (sleep > 1000)
 			sleep = 1000;
