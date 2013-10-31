@@ -13,8 +13,8 @@ extern struct mars_limiter server_limiter;
 
 extern atomic_t server_handler_count;
 
-struct server_mref_aspect {
-	GENERIC_ASPECT(mref);
+struct server_aio_aspect {
+	GENERIC_ASPECT(aio);
 	struct server_brick *brick;
 	struct list_head cb_head;
 };
